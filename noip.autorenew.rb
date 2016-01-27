@@ -1,10 +1,11 @@
 #!/usr/bin/env ruby
 
-# Summary:	The script avoid the need to manualy login every month in http://www.noip.com and update your domains to keep them alive.
-#			It will automaticaly retrieve his current public IP from http://checkip.dyndns.org/
-# Author: Felipe Molina (@felmoltor)
+# Summary:	This script avoids the need to manually login to http://www.noip.com every month and update your domains to keep them active.
+#		It will automaticaly retrieve the machine's current public IP from http://checkip.dyndns.org/
+# Original Author: Felipe Molina (@felmoltor)
 # Date: July 2013
 # License: GPLv3
+# Minor changes (translation/language) by Jason Tait, January 2016
 
 require 'date'
 require 'mechanize'
@@ -34,7 +35,7 @@ def setMyCurrentNoIP(user,password,my_public_ip)
 		form.password = password
 	end.submit
 	
-	# Once successfuly loged in, access to DNS manage page
+	# Once successfuly logged in, access to DNS manage page
 	dns_page = m.get("https://www.noip.com/members/dns/")
 	dns_page.links_with(:text => "Modify").each do |link|
 		# Update all the domains with my current IP
@@ -54,17 +55,17 @@ end
 puts "======= #{Date.today.to_s} ========"
 
 if ARGV[0].nil? or ARGV[1].nil?
-	puts "Error. Especifica el usuario y la contrasenna para acceder a tu cuenta de noip.com"
+	puts "Error. Please specify the user and password to access your noip.com account"
+	puts "e.g. ruby noip.autorenew user password"
 	exit(1)
 else
 	user = ARGV[0]
-	password = ARGV[1]	
-	# domain_to_update = ARGV[3] if !ARGV[3].nil? # TODO: If you want to keep alive only one domain, specify it
+	password = ARGV[1]
 	
 	puts "Getting my current public IP..."
 	my_public_ip = getMyCurrentIP()
 	puts "Done: #{my_public_ip}"
-	puts "Sending Keep Alive request to noip.com..."
+	puts "Sending request to noip.com..."
 	updated_hosts = setMyCurrentNoIP(user,password,my_public_ip)	
 	if !updated_hosts.nil? and updated_hosts.size > 0
 		puts "Done. Keeping alive #{updated_hosts.size} host with IP '#{my_public_ip}':"
@@ -72,7 +73,7 @@ else
 			puts "- #{host}"
 		end
 	else
-		$stderr.puts "There was an error updating the domains of noip.com or there were no hosts to update"
+		$stderr.puts "There was an error while updating or there were no hosts to update"
 	end
 end
 
