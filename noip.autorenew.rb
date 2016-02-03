@@ -5,7 +5,9 @@
 # Original Author: Felipe Molina (@felmoltor)
 # Date: July 2013
 # License: GPLv3
-# Minor changes (translation/language) by Jason Tait, January 2016
+# Changes by Jason Tait
+#   - translation/language - January 2016
+#   - added a check that will make update only run if last update was done at least 15 days ago - February 2, 2016
 
 require 'date'
 require 'mechanize'
