@@ -12,5 +12,5 @@ refresh your hostnames.
 Needed gems
 -----------
 
-- mechanize
-- nokogiri
+- [mechanize](https://github.com/sparklemotion/mechanize)
+- [nokogiri](http://www.nokogiri.org)
