@@ -52,29 +52,75 @@ end
 
 # ================
 
+def shouldUpdate?(check_file)
+
+	update = false
+
+	if !File.exist?(check_file)
+		# file did not exist, so update
+		f = File.new(check_file, "w+")
+		update = true
+
+	else
+		f = File.open(check_file, "r+")
+		# check if update is necessary by checking when last update occured
+		datestring = f.read()
+		date = Date.parse(datestring)
+
+		if (Date.today - 15) > date
+			update = true
+		end
+
+	end
+
+	f.close()
+	return update
+
+end
+
+# ================
+
+def recordUpdateDate(filename)
+	f = File.open(filename, "w")
+	f.write("#{Date.today.to_s}" + "\n")
+	f.close()
+end
+
+# ================
+
 puts "======= #{Date.today.to_s} ========"
 
-if ARGV[0].nil? or ARGV[1].nil?
-	puts "Error. Please specify the user and password to access your noip.com account"
-	puts "e.g. ruby noip.autorenew user password"
-	exit(1)
-else
-	user = ARGV[0]
-	password = ARGV[1]
-	
-	puts "Getting my current public IP..."
-	my_public_ip = getMyCurrentIP()
-	puts "Done: #{my_public_ip}"
-	puts "Sending request to noip.com..."
-	updated_hosts = setMyCurrentNoIP(user,password,my_public_ip)	
-	if !updated_hosts.nil? and updated_hosts.size > 0
-		puts "Done. Keeping alive #{updated_hosts.size} host with IP '#{my_public_ip}':"
-		updated_hosts.each do |host|
-			puts "- #{host}"
-		end
+update_filename = "last_update.dat"
+
+if shouldUpdate?(update_filename)
+
+	if ARGV[0].nil? or ARGV[1].nil?
+		puts "Error. Please specify the user and password to access your noip.com account"
+		puts "e.g. ruby noip.autorenew user password"
+		exit(1)
 	else
-		$stderr.puts "There was an error while updating or there were no hosts to update"
+		user = ARGV[0]
+		password = ARGV[1]
+	
+		puts "Getting my current public IP..."
+		my_public_ip = getMyCurrentIP()
+		puts "Done: #{my_public_ip}"
+		puts "Sending request to noip.com..."
+		updated_hosts = setMyCurrentNoIP(user,password,my_public_ip)
+		if !updated_hosts.nil? and updated_hosts.size > 0
+			puts "Done. Keeping alive #{updated_hosts.size} host with IP '#{my_public_ip}':"
+			updated_hosts.each do |host|
+				puts "- #{host}"
+			end
+			recordUpdateDate(update_filename)
+		else
+			$stderr.puts "There was an error while updating or there were no hosts to update"
+		end
 	end
+
+else
+	puts "Update was performed within the last 15 days, exiting"
 end
 
 puts "==============================="
+
