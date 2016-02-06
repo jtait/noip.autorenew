@@ -92,7 +92,7 @@ end
 
 puts "======= #{Date.today.to_s} ========"
 
-update_filename = "last_update.dat"
+update_filename = File.expand_path(File.dirname(__FILE__)) + "/last_update.dat"
 
 if shouldUpdate?(update_filename)
 
