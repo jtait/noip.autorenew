@@ -8,6 +8,7 @@
 # Changes by Jason Tait
 #   - translation/language - January 2016
 #   - added a check that will make update only run if last update was done at least 15 days ago - February 2, 2016
+#   - added a check of the previous IP address used, will update if different, ignoring 15 day rule - February 19, 2016
 
 require 'date'
 require 'mechanize'
