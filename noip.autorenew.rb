@@ -15,7 +15,7 @@ require 'mechanize'
 def getMyCurrentIP()
 	m = Mechanize.new
 	m.user_agent_alias = 'Windows IE 8'
-	
+
 	ip_page = m.get("http://checkip.dyndns.org/")
 	ip = ip_page.root.xpath("//body").text.gsub(/^.*: /,"")
 	return ip
@@ -24,19 +24,19 @@ end
 # ================
 
 def setMyCurrentNoIP(user,password,my_public_ip)
-	
+
 	updated_hosts = []
-	
+
 	m = Mechanize.new
 	m.user_agent_alias = 'Windows IE 8'
-	
+
 	loginpage = m.get("https://www.noip.com/login/")
-	
+
 	members_page = loginpage.form_with(:id => 'clogs') do |form|
 		form.username = user
 		form.password = password
 	end.submit
-	
+
 	# Once successfuly logged in, access to DNS manage page
 	dns_page = m.get("https://www.noip.com/members/dns/")
 	dns_page.links_with(:text => "Modify").each do |link|
@@ -48,13 +48,13 @@ def setMyCurrentNoIP(user,password,my_public_ip)
 		update_host_page.forms[0].field_with(:name => "host[ip]").value = my_public_ip
 		update_host_page.forms[0].submit
 	end
-	
+
 	return updated_hosts
 end
 
 # ================
 
-def shouldUpdate?(check_file)
+def shouldUpdate?(check_file, public_ip)
 
 	update = false
 
@@ -65,11 +65,11 @@ def shouldUpdate?(check_file)
 
 	else
 		f = File.open(check_file, "r+")
-		# check if update is necessary by checking when last update occured
-		datestring = f.read()
-		date = Date.parse(datestring)
+		file_contents = f.readlines()
+		date = Date.parse(file_contents[0])
 
-		if (Date.today - 15) > date
+		# check if update is necessary
+		if (Date.today - 15) > date || (public_ip.to_s).eql?(file_contents[1].to_s)
 			update = true
 		end
 
@@ -82,9 +82,10 @@ end
 
 # ================
 
-def recordUpdateDate(filename)
+def recordUpdateDate(filename, public_ip)
 	f = File.open(filename, "w")
 	f.write("#{Date.today.to_s}" + "\n")
+	f.write(public_ip.to_s + "\n")
 	f.close()
 end
 
@@ -92,21 +93,21 @@ end
 
 puts "======= #{Date.today.to_s} ========"
 
-update_filename = File.expand_path(File.dirname(__FILE__)) + "/last_update.dat"
+update_filename = File.expand_path(File.dirname(__FILE__)) + "/noip.autorenew.dat"
 
-if shouldUpdate?(update_filename)
+if ARGV[0].nil? or ARGV[1].nil?
+	puts "Error. Please specify the user and password to access your noip.com account"
+	puts "e.g. ruby noip.autorenew user password"
+	exit(1)
+else
+	user = ARGV[0]
+	password = ARGV[1]
 
-	if ARGV[0].nil? or ARGV[1].nil?
-		puts "Error. Please specify the user and password to access your noip.com account"
-		puts "e.g. ruby noip.autorenew user password"
-		exit(1)
-	else
-		user = ARGV[0]
-		password = ARGV[1]
-	
-		puts "Getting my current public IP..."
-		my_public_ip = getMyCurrentIP()
-		puts "Done: #{my_public_ip}"
+	puts "Getting my current public IP..."
+	my_public_ip = getMyCurrentIP()
+	puts "Done: #{my_public_ip}"
+
+	if shouldUpdate?(update_filename, my_public_ip)
 		puts "Sending request to noip.com..."
 		updated_hosts = setMyCurrentNoIP(user,password,my_public_ip)
 		if !updated_hosts.nil? and updated_hosts.size > 0
@@ -114,15 +115,15 @@ if shouldUpdate?(update_filename)
 			updated_hosts.each do |host|
 				puts "- #{host}"
 			end
-			recordUpdateDate(update_filename)
+			recordUpdateDate(update_filename, my_public_ip)
 		else
 			$stderr.puts "There was an error while updating or there were no hosts to update"
 		end
+
+	else
+		puts "Update was performed within the last 15 days, exiting"
 	end
 
-else
-	puts "Update was performed within the last 15 days, exiting"
 end
 
 puts "==============================="
-
