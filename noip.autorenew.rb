@@ -9,6 +9,7 @@
 #   - translation/language - January 2016
 #   - added a check that will make update only run if last update was done at least 15 days ago - February 2, 2016
 #   - added a check of the previous IP address used, will update if different, ignoring 15 day rule - February 19, 2016
+#   - fixed error in IP comparison - script will now update if IP address has changed.  Also improved information given on the reason the update request is made - May 11, 2016
 
 require 'date'
 require 'mechanize'
@@ -57,12 +58,12 @@ end
 
 def shouldUpdate?(check_file, public_ip)
 
-	update = false
+	update = 0
 
 	if !File.exist?(check_file)
 		# file did not exist, so update
 		f = File.new(check_file, "w+")
-		update = true
+		update = 1
 
 	else
 		f = File.open(check_file, "r+")
@@ -70,8 +71,10 @@ def shouldUpdate?(check_file, public_ip)
 		date = Date.parse(file_contents[0])
 
 		# check if update is necessary
-		if (Date.today - 15) > date || (public_ip.to_s).eql?(file_contents[1].to_s)
-			update = true
+		if (Date.today - 15) > date
+			update = 2
+		elsif (public_ip.to_s + "\n") != (file_contents[1].to_s)
+			update = 3
 		end
 
 	end
@@ -108,7 +111,19 @@ else
 	my_public_ip = getMyCurrentIP()
 	puts "Done: #{my_public_ip}"
 
-	if shouldUpdate?(update_filename, my_public_ip)
+	update = shouldUpdate?(update_filename, my_public_ip)
+	if update == 0
+		puts "Update was performed within the last 15 days and IP has not changed, exiting"
+
+	elsif update > 0
+		if update == 1
+			puts "dat file doesn't exist"
+		elsif update == 2
+			puts "Update performed more than 15 days ago"
+		elsif update == 3
+			puts "IP has changed since last update"
+		end
+
 		puts "Sending request to noip.com..."
 		updated_hosts = setMyCurrentNoIP(user,password,my_public_ip)
 		if !updated_hosts.nil? and updated_hosts.size > 0
@@ -121,8 +136,6 @@ else
 			$stderr.puts "There was an error while updating or there were no hosts to update"
 		end
 
-	else
-		puts "Update was performed within the last 15 days, exiting"
 	end
 
 end
