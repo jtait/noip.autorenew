@@ -162,7 +162,7 @@ else
 			recordUpdateDate(update_filename, my_public_ip)
 		else
 			error_message = "There was an error while updating or there were no hosts to update"
-			$stderr.puts error_message
+			puts error_message
 			if notifications		
 				sendGmail(gmail_username, gmail_password, gmail_to, error_message)
 			end
