@@ -10,9 +10,32 @@
 #   - added a check that will make update only run if last update was done at least 15 days ago - February 2, 2016
 #   - added a check of the previous IP address used, will update if different, ignoring 15 day rule - February 19, 2016
 #   - fixed error in IP comparison - script will now update if IP address has changed.  Also improved information given on the reason the update request is made - May 11, 2016
+#   - added email notification if an error occurs - July 2, 2018
 
 require 'date'
 require 'mechanize'
+require 'mail'
+
+def sendGmail(username, password, email_to, message)
+	options = {
+		:address              => "smtp.gmail.com",
+		:port                 => 587,
+		:domain               => 'localhost',
+		:user_name            => username,
+		:password             => password,
+		:authentication       => 'plain',
+		:enable_starttls_auto => true
+	}
+	Mail.defaults do
+		delivery_method :smtp, options
+	end
+	Mail.deliver do
+		to email_to
+		from username + '@gmail.com'
+		subject 'noip.autorenew notification'
+		body message
+	end
+end
 
 def getMyCurrentIP()
 	m = Mechanize.new
@@ -22,8 +45,6 @@ def getMyCurrentIP()
 	ip = ip_page.root.xpath("//body").text.gsub(/^.*: /,"")
 	return ip
 end
-
-# ================
 
 def setMyCurrentNoIP(user,password,my_public_ip)
 
@@ -53,8 +74,6 @@ def setMyCurrentNoIP(user,password,my_public_ip)
 
 	return updated_hosts
 end
-
-# ================
 
 def shouldUpdate?(check_file, public_ip)
 
@@ -99,13 +118,22 @@ puts "======= #{Date.today.to_s} ========"
 
 update_filename = File.expand_path(File.dirname(__FILE__)) + "/noip.autorenew.dat"
 
+if ARGV[2].nil? or ARGV[3].nil? or ARGV[4].nil?
+	puts "will not send gmail notifications"
+	notifications = false
+else
+	notifications = true
+end
+
 if ARGV[0].nil? or ARGV[1].nil?
 	puts "Error. Please specify the user and password to access your noip.com account"
-	puts "e.g. ruby noip.autorenew user password"
 	exit(1)
 else
 	user = ARGV[0]
 	password = ARGV[1]
+	gmail_username = ARGV[2]
+	gmail_password = ARGV[3]
+	gmail_to = ARGV[4]
 
 	puts "Getting my current public IP..."
 	my_public_ip = getMyCurrentIP()
@@ -133,7 +161,11 @@ else
 			end
 			recordUpdateDate(update_filename, my_public_ip)
 		else
-			$stderr.puts "There was an error while updating or there were no hosts to update"
+			error_message = "There was an error while updating or there were no hosts to update"
+			$stderr.puts error_message
+			if notifications		
+				sendGmail(gmail_username, gmail_password, gmail_to, error_message)
+			end
 		end
 
 	end
