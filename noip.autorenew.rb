@@ -150,6 +150,7 @@ else
 			puts "Update performed more than 15 days ago"
 		elsif update == 3
 			puts "IP has changed since last update"
+			sendGmail(gmail_username, gmail_password, gmail_to, "updated IP address for #{user} to #{my_public_ip}"
 		end
 
 		puts "Sending request to noip.com..."
