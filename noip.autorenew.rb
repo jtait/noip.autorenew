@@ -103,8 +103,6 @@ def shouldUpdate?(check_file, public_ip)
 
 end
 
-# ================
-
 def recordUpdateDate(filename, public_ip)
 	f = File.open(filename, "w")
 	f.write("#{Date.today.to_s}" + "\n")
@@ -112,9 +110,7 @@ def recordUpdateDate(filename, public_ip)
 	f.close()
 end
 
-# ================
-
-puts "======= #{Date.today.to_s} ========"
+puts "========= #{Date.today.to_s} =========="
 
 update_filename = File.expand_path(File.dirname(__FILE__)) + "/noip.autorenew.dat"
 
