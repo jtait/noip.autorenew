@@ -151,7 +151,7 @@ else
     update = should_update?(update_filename, my_public_ip)
   end
 
-  if update.zero
+  if update.zero?
     puts 'Update was performed within the last 15 days and IP has not changed, exiting'
   elsif update > 0
     case update
