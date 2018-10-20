@@ -17,32 +17,11 @@
 #     is made - May 11, 2016
 #   - added email notification if an error occurs - July 2, 2018
 #   - added force option, a lot of cleanup - October 11, 2018
+#   - removed gmail option, it doesn't play well with gmail security - October 20, 2018
 
 require 'date'
 require 'mechanize'
-require 'mail'
 require 'optparse'
-
-def send_gmail(username, password, email_to, message)
-  options = {
-    :address              => "smtp.gmail.com",
-    :port                 => 587,
-    :domain               => 'localhost',
-    :user_name            => username,
-    :password             => password,
-    :authentication       => 'plain',
-    :enable_starttls_auto => true
-  }
-  Mail.defaults do
-    delivery_method :smtp, options
-  end
-  Mail.deliver do
-    to email_to
-    from username + '@gmail.com'
-    subject 'noip.autorenew notification'
-    body message
-  end
-end
 
 def my_current_ip?
   m = Mechanize.new
@@ -124,22 +103,12 @@ puts "========= #{Date.today} =========="
 
 update_filename = File.expand_path(__dir__) + '/noip.autorenew.dat'
 
-if ARGV[2].nil? or ARGV[3].nil? or ARGV[4].nil?
-  puts 'will not send gmail notifications'
-  notifications = false
-else
-  notifications = true
-end
-
 if ARGV[0].nil? or ARGV[1].nil?
   puts 'Error. Please specify the user and password to access your noip.com account'
   exit(1)
 else
   user = ARGV[0]
   password = ARGV[1]
-  gmail_username = ARGV[2]
-  gmail_password = ARGV[3]
-  gmail_to = ARGV[4]
 
   puts 'Getting my current public IP...'
   my_public_ip = my_current_ip?
@@ -161,12 +130,6 @@ else
       puts 'Update performed more than 15 days ago'
     when 3
       puts 'IP has changed since last update'
-      send_gmail(
-          gmail_username,
-          gmail_password,
-          gmail_to,
-          "updated IP address for #{user} to #{my_public_ip}"
-        )
     when 4
       puts 'forcing update'
     end
@@ -182,9 +145,6 @@ else
     else
       error_message = 'There was an error while updating or there were no hosts to update'
       puts error_message
-      if notifications
-        send_gmail(gmail_username, gmail_password, gmail_to, error_message)
-      end
     end
 
   end
