@@ -38,7 +38,3 @@ and then add this line to the bottom of the file:
 and save and exit.  This will run the script every night at midnight.  Of course you need to substitute the <path-to-script> with the path to where you stored the script.  The log will be stored in the same location, and can be useful to ensure the script is running.
 
 For more information on crontab, use the command '''man 5 crontab''' from the Linux terminal.
-
-To add an email notification if the update fails, add 3 arguments to the command:
-
-    ruby noip.autorenew.rb <noip-username> <noip-password> <gmail username> <gmail password> <receiver email address>
