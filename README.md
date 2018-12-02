@@ -11,7 +11,6 @@ The script checks a file with the date and IP used during the previous update. I
 ### Needed gems
 - [mechanize](https://github.com/sparklemotion/mechanize)
 - [nokogiri](http://www.nokogiri.org)
-- [mail](https://github.com/mikel/mail/)
 
 Follow the instructions at [nokogiri](http://www.nokogiri.org/tutorials/installing_nokogiri.html) to install the gems if you have trouble.
 
